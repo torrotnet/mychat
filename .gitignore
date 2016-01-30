@@ -1,0 +1,13 @@
+*~
+*.pyc
+*.egg
+*.egg-info
+src/*.egg-info/*
+/.project
+/.pydevproject
+/.settings
+/.idea
+/build
+/dist
+/.tox
+/runtests.py
