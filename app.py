@@ -25,11 +25,19 @@ except:
     exit(1)
 
 
-class IndexPageHandler(BaseHandler):
-    def get(self):
+class RoomHandler(BaseHandler):
+    def get(self, room=None):
         if not self.current_user:
             self.redirect("/login")
             return
+        if not room:
+            self.redirect("/room/bot")
+            return
+
+        # Set chat room as instance var (should be validated).
+
+        self.room = str(room)
+
         name = tornado.escape.xhtml_escape(self.current_user)
         self.render("index.html", title="MyChat", context={"name": name})
 
@@ -106,33 +114,20 @@ class MessageHandler(sockjs.tornado.SockJSConnection):
         self._enter_leave_notification('leaves')
 
 
-# application = tornado.web.Application(
-#     [(r'/', IndexPageHandler),
-#      (r'/send_message', SendMessageHandler),
-#      # (r'/register', RegisterHandler)] +
-#      ] +
-#     sockjs.tornado.SockJSRouter(MessageHandler, '/sockjs').urls)
-
-
 class Application(tornado.web.Application):
     def __init__(self, **overrides):
         handlers = [
-            url(r"/", IndexPageHandler, name='index'),
+            url(r"/", RoomHandler, name='index'),
+            url(r"/room/([a-zA-Z0-9]*)$", RoomHandler, name='index'),
             url(r"/login", LoginHandler, name='login'),
             url(r"/register", RegisterHandler, name='register'),
             url(r"/logout", LogoutHandler, name='logout'),
+            url(r"/send_message", SendMessageHandler, name='send_message')
         ] + sockjs.tornado.SockJSRouter(MessageHandler, '/sockjs').urls
         settings = {
             'static_path': os.path.join(os.path.dirname(__file__), 'static'),
             'template_path': os.path.join(os.path.dirname(__file__), 'templates'),
             "cookie_secret": base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes),
-            # 'twitter_consumer_key': 'KEY',
-            # 'twitter_consumer_secret': 'SECRET',
-            # 'facebook_app_id': '180378538760459',
-            # 'facebook_secret': '7b82b89eb6aa0d3359e2036e4d1eedf0',
-            # 'facebook_registration_redirect_url': 'http://localhost:8888/facebook_login',
-            # 'mandrill_key': 'KEY',
-            # 'mandrill_url': 'https://mandrillapp.com/api/1.0/',
 
             # 'xsrf_cookies': False,
             'debug': True,
